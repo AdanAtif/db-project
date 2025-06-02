@@ -1,4 +1,4 @@
-import { createConnection } from "../../../../db/Db";
+import { createConnection } from "@/db/Db";
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 
