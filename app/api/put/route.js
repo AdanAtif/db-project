@@ -1,4 +1,4 @@
-import { createConnection } from "../../../db/Db";
+import { createConnection } from "@/db/Db";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
