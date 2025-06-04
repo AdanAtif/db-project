@@ -5,15 +5,17 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import Loader from "@/components/Loader";
 import SQLPreview from "@/components/SqlPreview";
+import { FaExchangeAlt, FaLock, FaMoneyBillWave, FaUser, FaCreditCard } from "react-icons/fa";
 
 const TransferPage = () => {
-  const [accounts, setAccounts] = useState<{ accountNumber: string, accountType: string }[]>([]);
+  const [accounts, setAccounts] = useState<{ accountNumber: string, accountType: string, balance: string }[]>([]);
   const [selectedAccount, setSelectedAccount] = useState('');
   const [recipientAccount, setRecipientAccount] = useState('');
   const [amount, setAmount] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
+  const [selectedAccountBalance, setSelectedAccountBalance] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("userId");
@@ -33,10 +35,31 @@ const TransferPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (selectedAccount) {
+      const account = accounts.find(acc => acc.accountNumber === selectedAccount);
+      if (account) {
+        setSelectedAccountBalance(account.balance);
+      }
+    } else {
+      setSelectedAccountBalance(null);
+    }
+  }, [selectedAccount, accounts]);
+
   const handleTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAccount || !recipientAccount || !amount || !pin) {
       toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (parseFloat(amount) <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+
+    if (selectedAccountBalance && parseFloat(amount) > parseFloat(selectedAccountBalance)) {
+      toast.error("Insufficient funds");
       return;
     }
 
@@ -52,6 +75,7 @@ const TransferPage = () => {
       setRecipientAccount('');
       setAmount('');
       setPin('');
+      if (userId) fetchAccounts(userId); // Refresh account data
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Transfer failed.");
     } finally {
@@ -60,80 +84,143 @@ const TransferPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col sm:flex-row justify-center items-center gap-32">
-      <div className="min-h-screen flex items-center justify-center px-4 text-black">
-        <div className="w-full min-w-md">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-green-400 to-emerald-500 py-4 px-6">
-              <h1 className="text-2xl font-bold text-white">Transfer Money</h1>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Transfer Form */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-500 py-6 px-8">
+            <div className="flex items-center space-x-3">
+              <FaExchangeAlt className="text-white text-2xl" />
+              <h1 className="text-2xl font-bold text-white">Money Transfer</h1>
             </div>
-            <form className="p-6 space-y-4" onSubmit={handleTransfer}>
-              <div className="space-y-2">
-                <h2 className="text-lg font-semibold text-gray-700">Fill The Form</h2>
-                <div>
-                  <label htmlFor="account" className="block text-sm font-medium text-gray-700">Select Your Account</label>
-                  <select
-                    id="account"
-                    value={selectedAccount}
-                    onChange={(e) => setSelectedAccount(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-                  >
-                    <option value="">-- Select Account --</option>
-                    {accounts.map(acc => (
-                      <option key={acc.accountNumber} value={acc.accountNumber}>
-                        {acc.accountNumber} ({acc.accountType})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          </div>
+          
+          <form onSubmit={handleTransfer} className="p-8 space-y-6">
+            {/* Account Selection */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 flex items-center">
+                <FaCreditCard className="mr-2 text-blue-500" />
+                From Account
+              </label>
+              <select
+                value={selectedAccount}
+                onChange={(e) => setSelectedAccount(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border bg-gray-50"
+                required
+              >
+                <option value="">-- Select Your Account --</option>
+                {accounts.map(acc => (
+                  <option key={acc.accountNumber} value={acc.accountNumber}>
+                    {acc.accountNumber} ({acc.accountType}) - PKR {acc.balance}
+                  </option>
+                ))}
+              </select>
+              {selectedAccountBalance && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Available Balance: <span className="font-semibold">PKR {selectedAccountBalance}</span>
+                </p>
+              )}
+            </div>
 
-                <div>
-                  <label htmlFor="recipient" className="block text-sm font-medium text-gray-700">Recipient Account Number</label>
-                  <input
-                    type="text"
-                    id="recipient"
-                    value={recipientAccount}
-                    onChange={(e) => setRecipientAccount(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-                  />
-                </div>
+            {/* Recipient Account */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 flex items-center">
+                <FaUser className="mr-2 text-blue-500" />
+                Recipient Account Number
+              </label>
+              <input
+                type="text"
+                value={recipientAccount}
+                onChange={(e) => setRecipientAccount(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border bg-gray-50"
+                placeholder="Enter recipient's account number"
+                required
+              />
+            </div>
 
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium text-gray-700">Amount</label>
-                  <input
-                    type="number"
-                    id="amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-                  />
+            {/* Amount */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 flex items-center">
+                <FaMoneyBillWave className="mr-2 text-blue-500" />
+                Amount
+              </label>
+              <div className="relative mt-1 rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">PKR </span>
                 </div>
-
-                <div>
-                  <label htmlFor="pin" className="block text-sm font-medium text-gray-700">Enter Your Pin</label>
-                  <input
-                    type="password"
-                    id="pin"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
-                  />
-                </div>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="block w-full pl-10 pr-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 p-3 border bg-gray-50"
+                  placeholder="0.00"
+                  min="1"
+                  step="0.01"
+                  required
+                />
               </div>
+            </div>
+
+            {/* PIN */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 flex items-center">
+                <FaLock className="mr-2 text-blue-500" />
+                Transaction PIN
+              </label>
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3 border bg-gray-50"
+                placeholder="Enter your 4-digit PIN"
+                maxLength={4}
+                pattern="\d{4}"
+                required
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center py-2 px-4 rounded-md text-white bg-green-500 hover:bg-green-600"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
               >
-                {loading ? <Loader /> : "Transfer"}
+                {loading ? (
+                  <>
+                    <Loader />
+                  </>
+                ) : (
+                  <>
+                    <FaExchangeAlt className="mr-2" />
+                    Transfer Money
+                  </>
+                )}
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
+        </div>
+
+        {/* SQL Preview */}
+        <div className="hidden lg:block">
+          <SQLPreview
+            sqlText={`-- Deduct from sender's account
+UPDATE accounts 
+SET balance = balance - ${amount || ':amount'} 
+WHERE account_number = '${selectedAccount || ':fromAccount'}' 
+AND pin = '${pin || ':pin'}';
+
+-- Add to recipient's account
+UPDATE accounts 
+SET balance = balance + ${amount || ':amount'} 
+WHERE account_number = '${recipientAccount || ':toAccount'}';
+
+-- Record transaction
+INSERT INTO transfers (from_account, to_account, amount, timestamp)
+VALUES ('${selectedAccount || ':fromAccount'}', '${recipientAccount || ':toAccount'}', ${amount || ':amount'}, NOW());`}
+          />
         </div>
       </div>
-      <SQLPreview
-        sqlText={`UPDATE accounts SET balance = balance - ${amount || 'Amount'} WHERE account_number = '${selectedAccount || 'FromAccount'}' AND pin = '${pin || 'Pin'}';\nUPDATE accounts SET balance = balance + ${amount || 'Amount'} WHERE account_number = '${recipientAccount || 'ToAccount'}';`}
-      />
     </div>
   );
 };

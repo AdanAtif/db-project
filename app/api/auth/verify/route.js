@@ -45,10 +45,111 @@ export async function PATCH(request) {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: userEmail,
-      subject: "Your New Verification Code",
-      text: `Your new verification code is: ${verificationCode}`,
-      html: `<p>Your new verification code is: <b>${verificationCode}</b></p>`,
+      to: email,
+      subject: "Your Verification Code",
+      text: `Your verification code is: ${verificationCode}`,
+      html: `<!DOCTYPE html>
+      <html>
+<head>
+  <style>
+      body {
+          font-family: 'Arial', sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+      }
+      .header {
+          background-color: #008080; /* Teal */
+          padding: 20px;
+          text-align: center;
+          border-radius: 8px 8px 0 0;
+      }
+      .header img {
+          max-width: 150px;
+      }
+      .content {
+          padding: 30px;
+          background-color: #f9f9f9;
+          border-left: 1px solid #e0e0e0;
+          border-right: 1px solid #e0e0e0;
+      }
+      .code-container {
+          background-color: #0077b6; /* Blue */
+          color: white;
+          font-size: 28px;
+          font-weight: bold;
+          letter-spacing: 3px;
+          padding: 20px;
+          text-align: center;
+          border-radius: 5px;
+          margin: 25px 0;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      }
+      .footer {
+          background-color: #e6f2f2;
+          padding: 20px;
+          text-align: center;
+          border-radius: 0 0 8px 8px;
+          font-size: 12px;
+          color: #666;
+          border-left: 1px solid #e0e0e0;
+          border-right: 1px solid #e0e0e0;
+          border-bottom: 1px solid #e0e0e0;
+      }
+      .button {
+          display: inline-block;
+          background-color: #008080; /* Teal */
+          color: white !important;
+          text-decoration: none;
+          padding: 12px 25px;
+          border-radius: 5px;
+          margin: 15px 0;
+          font-weight: bold;
+      }
+      .note {
+          font-size: 14px;
+          color: #666;
+          margin-top: 20px;
+      }
+  </style>
+</head>
+<body>
+  <div class="header">
+      <!-- Replace with actual NIIT Bank logo URL -->
+      <img src="https://example.com/niit-bank-logo.png" alt="NIIT Bank">
+  </div>
+  
+  <div class="content">
+      <h2 style="color: #008080;">Email Verification</h2>
+      <p>Dear Valued Customer,</p>
+      <p>Thank you for registering with NIIT Bank. To complete your registration, please use the following verification code:</p>
+      
+      <div class="code-container">
+          ${verificationCode}
+      </div>
+      
+      <p>This code will expire in 15 minutes. For your security, please do not share this code with anyone.</p>
+      
+      <p>If you didn't request this code, please ignore this email or contact our support team immediately.</p>
+      
+      <p class="note">Note: This is an automated message. Please do not reply to this email.</p>
+  </div>
+  
+  <div class="footer">
+      <p>&copy; 2023 NIIT Bank. All rights reserved.</p>
+      <p>NIIT Bank, 123 Financial District, City, Country</p>
+      <p>Customer Support: support@niitbank.com | +1 (800) 123-4567</p>
+  </div>
+</body>
+</html>`,
+    }, (error, info) => {
+      if (error) {
+        console.error("Email sending error:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
     });
 
     return NextResponse.json({

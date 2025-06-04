@@ -11,6 +11,7 @@ export default function VerifyPage() {
   const [code, setCode] = useState("");
   const [storedCode, setStoredCode] = useState("");
   const [userId, setUserId] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -35,14 +36,16 @@ export default function VerifyPage() {
       return;
     }
     try {
+      setLoading(true);
       await axios.post("/api/auth/verify", { userId });
 
       localStorage.removeItem("code");
-      localStorage.removeItem("userId");
       toast.success("Email verified successfully!");
       router.push("/auth/information");
     } catch (error) {
       toast.error("Verification failed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,64 +62,110 @@ export default function VerifyPage() {
     if (!isResendEnabled) return;
 
     try {
+      setLoading(true);
       const response = await axios.patch("/api/auth/verify", { userId });
       localStorage.setItem("code", response.data.code);
-      toast.success("New code sent!");
+      toast.success("New verification code sent!");
       setResendTimer(60);
       setIsResendEnabled(false);
     } catch (error) {
       toast.error("Failed to resend code.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen py-6 flex flex-col sm:flex-row justify-center items-center sm:py-12 gap-32">
-      <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">
-        <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-          <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-            <div className="max-w-md mx-auto">
-              <h1 className="text-3xl font-semibold text-black">
-                Verify Code {}
-              </h1>
-              <div className="divide-y divide-gray-200">
-                <div className="py-8 text-base leading-6 space-y-6 text-gray-700 sm:text-lg sm:leading-7">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row items-center justify-center p-4 gap-8">
+      {/* Verification Form Section */}
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-teal-500 to-teal-600 py-8 px-10">
+            <h1 className="text-2xl font-bold text-white">Verify Your Email</h1>
+            <p className="text-teal-100 mt-2">We've sent a code to your email</p>
+          </div>
+          
+          <div className="p-8 space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="verification-code" className="block text-sm font-medium text-gray-700 mb-2">
+                  Verification Code
+                </label>
+                <div className="relative">
                   <input
                     type="text"
-                    placeholder="Verification Code"
+                    id="verification-code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-green-600"
+                    className="w-full px-4 py-3 text-lg text-center tracking-widest rounded-lg border border-gray-300 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                    placeholder="6-digit code"
+                    maxLength={6}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                   />
-                  <button
-                    onClick={handleVerify}
-                    className="bg-green-500 text-white rounded-md px-2 py-1 w-full"
-                  >
-                    Verify
-                  </button>
-                  <div className="text-center text-sm text-gray-600">
-                    Didn’t get a code?{" "}
-                    <button
-                      onClick={handleResendCode}
-                      disabled={!isResendEnabled}
-                      className={`${
-                        isResendEnabled
-                          ? "text-green-600 font-semibold"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      Resend {isResendEnabled ? "" : `(${resendTimer}s)`}
-                    </button>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                    </svg>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <button
+                  onClick={handleVerify}
+                  disabled={loading}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition"
+                >
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </span>
+                  ) : (
+                    "Verify Account"
+                  )}
+                </button>
+              </div>
+
+              <div className="text-center text-sm text-gray-600 pt-2">
+                <p>
+                  Didn't receive a code?{" "}
+                  <button
+                    onClick={handleResendCode}
+                    disabled={!isResendEnabled || loading}
+                    className={`font-medium ${
+                      isResendEnabled && !loading
+                        ? "text-teal-600 hover:text-teal-500 cursor-pointer"
+                        : "text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Resend {!isResendEnabled && `(${resendTimer}s)`}
+                  </button>
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <SQLPreview
-        sqlText={`UPDATE users SET verified = true WHERE id = ${userId};`}
-      />
+
+      {/* SQL Preview Section */}
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-full">
+          <div className="bg-gray-800 py-4 px-6">
+            <h2 className="text-lg font-medium text-white">SQL Query Preview</h2>
+          </div>
+          <div className="p-6">
+            <SQLPreview sqlText={`UPDATE users SET verified = true WHERE id = ${userId || 'user_id'};`} />
+            <p className="mt-4 text-sm text-gray-600">
+              This is the SQL query that will be executed when you verify your account.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

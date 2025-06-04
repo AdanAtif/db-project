@@ -24,11 +24,11 @@ export default function UserInfoForm() {
     setUserId(id);
   }, []);
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) {
       toast.error("User not logged in.");
@@ -51,71 +51,152 @@ export default function UserInfoForm() {
   };
 
   const sqlText = userId
-    ? `INSERT INTO UserProfile ( user_id, first_name, last_name, address, phone, dob)
-values (${userId}, '${formData.firstName || "First Name"}', '${formData.lastName || "Last Name"}', '${formData.address || "Address"}', '${formData.phone || "Phone Number"}', '${formData.dob || "Date of Birth"}');`
+    ? `INSERT INTO UserProfile (user_id, first_name, last_name, address, phone, dob)
+VALUES (${userId}, '${formData.firstName || "First Name"}', '${formData.lastName || "Last Name"}', '${formData.address || "Address"}', '${formData.phone || "Phone Number"}', '${formData.dob || "Date of Birth"}');`
     : "Loading...";
 
   return (
-    <div className="min-h-screen flex flex-col sm:flex-row justify-center gap-32 items-center">
-      <div className="min-h-screen py-6 flex flex-col justify-center sm:py-12">
-        <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-          <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-          <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-            <div className="max-w-md mx-auto">
-              <h1 className="text-3xl font-semibold text-black">
-                Personal Information
-              </h1>
-              <form
-                className="divide-y divide-gray-200"
-                onSubmit={handleSubmit}
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row items-center justify-center p-4 md:p-8 gap-8">
+      {/* Form Section */}
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">Personal Information</h1>
+              <p className="text-gray-600 mt-1">Please fill in your details</p>
+            </div>
+            <div className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
+              Step 1 of 2
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                  placeholder="John"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                  Address
+                </label>
+                <input
+                  id="address"
+                  name="address"
+                  type="text"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                  placeholder="123 Main St, City"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                  placeholder="+1 (555) 123-4567"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
+                  Date of Birth
+                </label>
+                <input
+                  id="dob"
+                  name="dob"
+                  type="date"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 flex items-center justify-center"
               >
-                <div className="py-8 text-base leading-6 space-y-12 text-gray-700 sm:text-lg sm:leading-7">
-                  {(
-                    [
-                      "firstName",
-                      "lastName",
-                      "address",
-                      "phone",
-                      "dob",
-                    ] as const
-                  ).map((field) => (
-                    <div key={field} className="relative">
-                      <input
-                        id={field}
-                        name={field}
-                        type={
-                          field === "dob"
-                            ? "date"
-                            : field === "phone"
-                            ? "tel"
-                            : "text"
-                        }
-                        value={formData[field as keyof typeof formData]}
-                        onChange={handleChange}
-                        className="peer placeholder-transparent h-10 w-full border-b-2 border-gray-300 text-gray-900 focus:outline-none focus:border-pink-600"
-                        placeholder={field.replace(/([A-Z])/g, " $1")}
-                      />
-                      <label className="absolute left-0 -top-3.5 text-gray-600 text-sm peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-440 peer-placeholder-shown:top-2 transition-all peer-focus:-top-3.5 peer-focus:text-gray-600 peer-focus:text-sm">
-                        {field.replace(/([A-Z])/g, " $1")}
-                      </label>
-                    </div>
-                  ))}
-                  <div className="relative">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="bg-teal-500 text-white rounded-md px-2 py-1 w-full"
+                {loading ? (
+                  <Loader />
+                ) : (
+                  <>
+                    <span>Save Information</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 ml-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
                     >
-                      {loading ? <Loader /> : "Submit Information"}
-                    </button>
-                  </div>
-                </div>
-              </form>
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* SQL Preview Section */}
+      <div className="w-full max-w-2xl">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden h-full">
+          <div className="p-6 sm:p-8">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">SQL Preview</h2>
+            <div className="bg-white rounded-lg p-4 ">
+              <SQLPreview sqlText={sqlText} />
+            </div>
+            <div className="mt-4 text-sm text-gray-600">
+              <p>This is the SQL query that will be executed when you submit the form.</p>
             </div>
           </div>
         </div>
       </div>
-      <SQLPreview sqlText={sqlText} />
     </div>
   );
 }
